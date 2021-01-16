@@ -1,14 +1,15 @@
 // defines pins numbers
 
 // Motor
-const int stepPin = 6; 
+const int stepPin = 2;
 const int dirPin = 5;
 
 // UI
 const int potentiometerPin = 5;
 const int stepButtonPin = 7;
-const int startStopButtonPin = 2;
+const int startStopButtonPin = 3;
 const int redLedPin = 11;
+const int greenLedPin = 12;
 
 // Status
 int startStop = 0; // 0 stop, 1 start
@@ -32,6 +33,7 @@ void setup()
   pinMode(stepButtonPin, INPUT);
   pinMode(startStopButtonPin, INPUT);
   pinMode(redLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
 
   // Setup interrupt
   attachInterrupt(digitalPinToInterrupt(startStopButtonPin), start_stop_trigger, RISING);
@@ -44,14 +46,13 @@ void setup()
 
 void loop() 
 {
-
-  // read potentiometer value for time selection
-  int val = analogRead(potentiometerPin);
-  selected_rotation_time = calculate_time(val);
-
   if(startStop)
   {
     // rotation
+
+    // read potentiometer value for time selection
+    int val = analogRead(potentiometerPin);
+    selected_rotation_time = calculate_time(val);
     
     unsigned long time_rotation = millis();
 
@@ -68,7 +69,7 @@ void loop()
       Serial.print("Rotation executed: ");
       Serial.print("time selected: ");
       Serial.print(selected_rotation_time);
-      Serial.print("time execution: ");
+      Serial.print(" time execution: ");
       Serial.print(time_rotation - last_rotation_time);
       Serial.println();
 
@@ -93,6 +94,13 @@ void loop()
         last_step_time = millis();
   
         Serial.println("One step rotation executed");
+
+        // read potentiometer value for time selection
+        int val = analogRead(potentiometerPin);
+        selected_rotation_time = calculate_time(val);
+
+        Serial.print(", time selected ");
+        Serial.println(selected_rotation_time);
       }
     }  
   }
@@ -102,23 +110,23 @@ unsigned long calculate_time(int input_value)
 {
   unsigned long option = 0;
   
-  if(input_value > 0 && input_value <= 204)
+  if(input_value >= 0 && input_value < 204)
   {
     option = 60000; // 1 minute
   }
-  else if(input_value > 204 && input_value <= 408)
+  else if(input_value >= 204 && input_value < 408)
   {
     option = 120000; // 2 minute
   }
-  else if(input_value > 408 && input_value <= 612)
+  else if(input_value >= 408 && input_value < 612)
   {
     option = 180000; // 3 minute
   }
-  else if(input_value > 612 && input_value <= 816)
+  else if(input_value >= 612 && input_value < 816)
   {
     option = 240000; // 4 minute
   }
-  else
+  else if(input_value >= 816)
   {
     option = 300000; // 5 minute
   }
@@ -134,13 +142,13 @@ void start_stop_trigger() {
   {
     startStop = !startStop;
     digitalWrite(redLedPin, startStop);
+    digitalWrite(greenLedPin, startStop);
 
     Serial.print("Interrupt received, start/stop value: ");
 
     if(startStop)
     {
-      Serial.print("Start! - Selected time: ");
-      Serial.print(selected_rotation_time);
+      Serial.print("Start!");
     }
     else
     {
